@@ -714,6 +714,8 @@ class LBMBase(object):
         # Cast c to compute precision so that XLA call FXX matmul, 
         # which is faster (it is faster in some older versions of JAX, newer versions are smart enough to do this automatically)
         c = jnp.array(self.c, dtype=self.precisionPolicy.compute_dtype)
+        # print("c shape ", c.shape)
+        # print("u shape ", u.shape)
         cu = 3.0 * jnp.dot(u, c)
         usqr = 1.5 * jnp.sum(jnp.square(u), axis=-1, keepdims=True)
         feq = rho * self.w * (1.0 + cu * (1.0 + 0.5 * cu) - usqr)

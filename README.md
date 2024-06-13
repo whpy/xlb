@@ -1,3 +1,5 @@
+### This repository is only a copy of official XLB project of AutoDesk, please refer to AUTHOR for citation.  
+
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![GitHub star chart](https://img.shields.io/github/stars/Autodesk/XLB?style=social)](https://star-history.com/#Autodesk/XLB)
 <p align="center">

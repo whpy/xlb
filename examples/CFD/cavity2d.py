@@ -93,4 +93,4 @@ if __name__ == "__main__":
     }
 
     sim = Cavity(**kwargs)
-    sim.run(5000)
+    sim.run(50000)

@@ -448,7 +448,6 @@ class BounceBackMoving(BoundaryCondition):
         cu = 6.0 * self.lattice.w * jnp.dot(vel, c)
         return fout.at[indices].set(fin[indices][..., self.lattice.opp_indices] - cu)
 
-
 class BounceBackHalfway(BoundaryCondition):
     """
     Halfway bounce-back boundary condition for a lattice Boltzmann method simulation.
@@ -649,7 +648,6 @@ class DoNothing(BoundaryCondition):
         boundary nodes.
         """
         return fin[self.indices]
-
 
 class ZouHe(BoundaryCondition):
     """
@@ -911,7 +909,6 @@ class Regularized(ZouHe):
         fbd = self.regularize_fpop(fbd, feq)
         return fbd
 
-
 class ExtrapolationOutflow(BoundaryCondition):
     """
     Extrapolation outflow boundary condition for a lattice Boltzmann method simulation.
@@ -1022,7 +1019,6 @@ class ExtrapolationOutflow(BoundaryCondition):
         fbd = fbd.at[bindex, self.imissing].set(fin[self.indices][bindex, self.iknown])
         return fbd
 
-
 class InterpolatedBounceBackBouzidi(BounceBackHalfway):
     """
     A local single-node version of the interpolated bounce-back boundary condition due to Bouzidi for a lattice
@@ -1114,7 +1110,6 @@ class InterpolatedBounceBackBouzidi(BounceBackHalfway):
         if self.vel is not None:
             fbd = self.impose_boundary_vel(fbd, bindex)
         return fbd
-
 
 class InterpolatedBounceBackDifferentiable(InterpolatedBounceBackBouzidi):
     """

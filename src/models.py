@@ -15,6 +15,7 @@ class BGKSim(LBMBase):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        
 
     @partial(jit, static_argnums=(0,), donate_argnums=(1,))
     def collision(self, f):
@@ -25,6 +26,8 @@ class BGKSim(LBMBase):
         the distribution function is relaxed towards the equilibrium distribution function.
         """
         f = self.precisionPolicy.cast_to_compute(f)
+        print("shape of distribution function is: {}".format(f.shape))
+        print("type of f is: {}".format(type(f)))
         rho, u = self.update_macroscopic(f)
         feq = self.equilibrium(rho, u, cast_output=False)
         fneq = f - feq
@@ -235,7 +238,51 @@ class KBCSim(LBMBase):
 
         return s
 
+class NonNewtonianBGK(LBMBase):
+    def __init__(self, **kwargs):
+        super().__init__
+        self.NNPower = kwargs.get("NNPower",1)
+        self.NNnu = kwargs.get("NNnu")
 
+    @partial(jit, static_argnums=(0, 3), donate_argnums=(1,))
+    def step(self, f_poststreaming, timestep, return_fpost=False):
+        """
+        This function performs a single step of the LBM simulation.
+
+        It first performs the collision step, which is the relaxation of the distribution functions 
+        towards their equilibrium values. It then applies the respective boundary conditions to the 
+        post-collision distribution functions.
+
+        The function then performs the streaming step, which is the propagation of the distribution 
+        functions in the lattice. It then applies the respective boundary conditions to the post-streaming 
+        distribution functions.
+
+        Parameters
+        ----------
+        f_poststreaming: jax.numpy.ndarray
+            The post-streaming distribution functions.
+        timestep: int
+            The current timestep of the simulation.
+        return_fpost: bool, optional
+            If True, the function also returns the post-collision distribution functions.
+
+        Returns
+        -------
+        f_poststreaming: jax.numpy.ndarray
+            The post-streaming distribution functions after the simulation step.
+        f_postcollision: jax.numpy.ndarray or None
+            The post-collision distribution functions after the simulation step, or None if 
+            return_fpost is False.
+        """
+        f_postcollision = self.collision(f_poststreaming)
+        f_postcollision = self.apply_bc(f_postcollision, f_poststreaming, timestep, "PostCollision")
+        f_poststreaming = self.streaming(f_postcollision)
+        f_poststreaming = self.apply_bc(f_poststreaming, f_postcollision, timestep, "PostStreaming")
+
+        if return_fpost:
+            return f_poststreaming, f_postcollision
+        else:
+            return f_poststreaming, None
 class AdvectionDiffusionBGK(LBMBase):
     """
     Advection Diffusion Model based on the BGK model.

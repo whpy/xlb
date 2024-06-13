@@ -20,6 +20,8 @@ In this example you'll be introduced to the following concepts:
 nohup python3 examples/CFD/cylinder2d.py > logfile.log &
 """
 import os
+# os.environ["CUDA_VISIBLE_DEVICES"] = "1" # second gpu
+
 import json
 import jax
 from time import time
@@ -45,11 +47,11 @@ class Cylinder(BGKSim):
         coord = np.array([(i, j) for i in range(self.nx) for j in range(self.ny)])
         xx, yy = coord[:, 0], coord[:, 1]
         cx, cy = 2.*diam, 2.*diam
-        cylinder = (xx - cx)**2 + (yy-cy)**2 <= (diam/2.)**2
+        cylinder = (xx - cx)**2 + (yy-cy)**2 <= (diam/2.)**2 
         cylinder = coord[cylinder]
         implicit_distance = np.reshape((xx - cx)**2 + (yy-cy)**2 - (diam/2.)**2, (self.nx, self.ny))
-        self.BCs.append(InterpolatedBounceBackBouzidi(tuple(cylinder.T), implicit_distance, self.gridInfo, self.precisionPolicy))
-
+        # self.BCs.append(InterpolatedBounceBackBouzidi(tuple(cylinder.T), implicit_distance, self.gridInfo, self.precisionPolicy))
+        self.BCs.append(BounceBack(tuple(cylinder.T), self.gridInfo, self.precisionPolicy))
         # Outflow BC
         outlet = self.boundingBoxIndices['right']
         rho_outlet = np.ones((outlet.shape[0], 1), dtype=self.precisionPolicy.compute_dtype)
@@ -116,6 +118,7 @@ if __name__ == '__main__':
 
         nx = int(22*diam)
         ny = int(4.1*diam)
+        print("nx = %d, ny = %d",nx, ny)
 
         Re = 100.0
         visc = prescribed_vel * diam / Re
@@ -136,9 +139,12 @@ if __name__ == '__main__':
         }
         # characteristic time
         tc = prescribed_vel/diam
-        niter_max = int(100//tc)
+        niter_max = int(1.0//tc)
         sim = Cylinder(**kwargs)
+        start_time = time()
         sim.run(niter_max)
+        end_time = time()
+        print("total time used: {}s".format(end_time-start_time))
         CL_list.append(sim.CL_max)
         CD_list.append(sim.CD_max)
 

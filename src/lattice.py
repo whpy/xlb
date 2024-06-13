@@ -230,7 +230,6 @@ class LatticeD2Q9(Lattice):
         self.im = 3  # Number of imiddles (includes center)
         self.ik = 3  # Number of iknowns or iunknowns
 
-
 class LatticeD3Q19(Lattice):
     """
     Lattice class for 3D D3Q19 lattice.
@@ -255,7 +254,6 @@ class LatticeD3Q19(Lattice):
 
         self.im = 9  # Number of imiddles (includes center)
         self.ik = 5  # Number of iknowns or iunknowns
-
 
 class LatticeD3Q27(Lattice):
     """
