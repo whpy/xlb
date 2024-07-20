@@ -16,7 +16,7 @@ class Nsstepper(BGKSim):
 
     def set_boundary_conditions(self):
          # concatenate the indices of the left, right, and bottom walls
-        walls = np.concatenate((self.boundingBoxIndices["left"], self.boundingBoxIndices["right"], self.boundingBoxIndices["bottom"], self.boundingBoxIndices["top"]))
+        walls = np.concatenate((self.boundingBoxIndices["left"], self.boundingBoxIndices["right"], self.boundingBoxIndices["bottom"]))
         # apply bounce back boundary condition to the walls
         self.BCs.append(BounceBackHalfway(tuple(walls.T), self.gridInfo, self.precisionPolicy))
 
@@ -135,30 +135,35 @@ if __name__ == "__main__":
     print("omega is: ",sim.omega)
     
     nsf = sim.fluidstepper.assign_fields_sharded()
+    heatf = sim.assign_fields_sharded()
 
     timestep = 0
-    for i in range(200):
-        nsf, nsfstar = sim.fluidstepper.step(nsf, 1, False)
-        
+    for i in range(1000):
+        nsf, nsfstar = sim.fluidstepper.step(nsf, timestep, False)
+        rho_prev, u_prev = sim.fluidstepper.update_macroscopic(nsf)
+        sim.vel = u_prev
+        heatf, heatfstar = sim.step(heatf, timestep, False)
         if i%10 == 0:
             print(i)
 
         if i%100==0:
-            rho_prev, u_prev = sim.fluidstepper.update_macroscopic(nsf)
             rho_prev = downsample_field(rho_prev, sim.fluidstepper.downsamplingFactor)
             u_prev = downsample_field(u_prev, sim.fluidstepper.downsamplingFactor)
             # Gather the data from all processes and convert it to numpy arrays (move to host memory)
             rho_prev = process_allgather(rho_prev)
             u_prev = process_allgather(u_prev)
-            save_image(timestep, u_prev)
-            fields = {"rho": rho_prev[..., 0], "u_x": u_prev[..., 0], "u_y": u_prev[..., 1]}
+            rho = np.array(rho_prev[1:-1, 1:-1])
+            # print("rho shape",rho.shape)
+            u = np.array(u_prev[1:-1, 1:-1, :])
+            save_image(timestep, u)
+            fields = {"rho": rho[..., 0], "u_x": u[..., 0], "u_y": u[..., 1]}
             save_fields_vtk(timestep, fields)
         timestep = timestep + 1
     print(id(nsf))
 
-    rho_prev, u_prev = sim.fluidstepper.update_macroscopic(nsf)
-    u_prev = process_allgather(u_prev)
-    print(u_prev[...,0,0])
-    print(u_prev[...,255,0])
+    # rho_prev, u_prev = sim.fluidstepper.update_macroscopic(nsf)
+    # u_prev = process_allgather(u_prev)
+    # print(u_prev[...,0,0])
+    # print(u_prev[...,255,0])
     
     # sim.run(1000)
